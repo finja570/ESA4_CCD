@@ -1,0 +1,148 @@
+<html>
+<head>
+  <meta charset="UTF-8">
+
+  </head>
+
+  <body onload="addListener()">
+    <script type="application/javascript">
+
+      function addListener(){
+        let button = document.getElementById("button");
+        button.addEventListener("click", spielfeld);
+      }
+
+
+      function spielfeld(){
+        //punkte und Verloren/Gewonnen-Ausgabe werden zurueckgesetzt
+        let lost = document.getElementById("verloren");
+        lost.innerText ="";
+
+        let punkte = document.getElementById("punkte");
+        punkte.innerText = "Punkte: 0";
+
+        // JsonObjekt wird erstellt und Punktzahl zum Gewinnen wird ermittelt
+        let jsonString = document.input.eingabe.value;
+        level = JSON.parse(jsonString);
+        punktzahlGewinnen = parseInt(level.feld.x) * parseInt(level.feld.y);
+        punktzahlGewinnen -=level.bomben.length;
+
+        //Liste für alles Breaks, die wieder geloescht werden sollen, wenn ein neues Feld geladen wird
+        listeBr = new Array();
+
+        // Spielfeld wird erstellt
+        for(let i = 1; i <= level.feld.x; i++){
+
+          var br = document.createElement("br");
+          document.body.appendChild(br);
+          listeBr.push(br);
+
+          for(let j = 1; j <= level.feld.y; j++){
+
+            var button = document.createElement("button");
+            button.innerHTML = "Klick";
+            button.id = i+","+j;
+            button.addEventListener("click",spielzug);
+            document.body.appendChild(button);
+
+          }
+        }
+
+        var br1 = document.createElement("br");
+        document.body.appendChild(br1);
+        listeBr.push(br1);
+        var br2 = document.createElement("br");
+        document.body.appendChild(br2);
+        listeBr.push(br2);
+
+        // Button, um das erstellte Spielfeld wieder zu loeschen, wird erstellt
+        var buttLoeschen = document.createElement("button");
+        buttLoeschen.innerHTML = "Spielfeld loeschen";
+        buttLoeschen.id = "loeschen";
+        buttLoeschen.addEventListener("click",spielfeldLoeschen);
+        document.body.appendChild(buttLoeschen);
+
+      }
+
+      function spielfeldLoeschen(){
+        // Alle Button des Feldes werden geloescht
+          for(let i =1; i <= level.feld.x; i++){
+            for(let j =1; j <= level.feld.y; j++){
+              let butt = document.getElementById(i+","+j);
+              butt.parentNode.removeChild(butt);
+            }
+          }
+          // Button, um das Feld zu loeschen, wird auch geloescht
+          let butLoe = document.getElementById("loeschen");
+          butLoe.parentNode.removeChild(butLoe);
+
+          // Alle breaks der Liste werden geloescht
+          for(let br = 0; br < listeBr.length; br++){
+            listeBr[br].parentNode.removeChild(listeBr[br]);
+          }
+      }
+
+      // Zaehler des Punktesstandes
+      var zaehler = 0;
+
+      }
+
+      function spielzug(event){
+        // Button, der geklickt wurde, wird ermittelt und dessen Koordinaten werden gespeichert
+        let buttonID = event.target.id;
+        let koordinaten = buttonID.split(",");
+        let bombeGetroffen = false;
+
+        // Wird geprueft, ob der Button eine Bombe darstellt
+        for(let b = 0; b < level.bomben.length; b++){
+          if(koordinaten[0] == level.bomben[b].x && koordinaten[1] == level.bomben[b].y){
+            // Bombe getroffen
+            bombeGetroffen = true;
+            let lost = document.getElementById("verloren");
+            lost.innerText ="Verloren!";
+            let butBombe = document.getElementById(buttonID);
+            butBombe.innerText ="Bombe!";
+            zaehler = 0;
+
+          }
+        }
+          // Keine Bombe getroffen
+          if(bombeGetroffen == false){
+
+            zaehler++;
+            let zaehlerBomben = 0;
+            let punkte = document.getElementById("punkte");
+            punkte.innerText = "Punkte: " + zaehler;
+            for(let a = 0; a < level.bomben.length; a++){
+              if(Math.abs(level.bomben[a].x - koordinaten[0]) <= 1 && Math.abs(level.bomben[a].y -koordinaten[1]) <= 1){
+                zaehlerBomben++;
+              }
+            }
+
+            let but = document.getElementById(buttonID);
+            but.innerHTML = zaehlerBomben;
+
+            // Pruefen, ob der Spieler gewonnen hat
+            if(zaehler == punktzahlGewinnen){
+              let lost = document.getElementById("verloren");
+              lost.innerText ="Gewonnen!";
+            }
+          }
+      }
+
+      </script>
+
+    <form name="input">
+      JSON Eingabe:
+      <input type="text" name="eingabe" id="eingabe">
+      <input type="button" value="Los!" id="button"> <br> <br>
+      <p id="punkte">
+        Punkte:
+      </p>
+      <p id="verloren">
+      </p>
+      </form>
+
+
+  </body>
+  </html>
