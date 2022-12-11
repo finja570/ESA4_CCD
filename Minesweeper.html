@@ -1,0 +1,166 @@
+<html>
+<head>
+  <meta charset="UTF-8">
+</head>
+
+  <body onload="addListenerStartBtn()">
+    <link rel="stylesheet" href="Minesweeper.css">
+    <script type="application/javascript">
+
+      function addListenerStartBtn(){
+
+        let startButton = document.getElementById("startButton");
+        startButton.addEventListener("click", createGameboard);
+        startButton.addEventListener("click", resetOutcomeAndScore);
+      }
+
+      function resetOutcomeAndScore(){
+
+        displayOutcome = document.getElementById("displayOutcome");
+        displayOutcome.innerText = "";
+        score = document.getElementById("score");
+        score.innerText = "Score: 0";
+      }
+
+      function createGameboard(){
+
+        let jsonString = document.inputForm.userInput.value;
+        level = JSON.parse(jsonString);
+
+        xsizeGameboard = level.field.x;
+        ysizeGameboard = level.field.y;
+        // list of all created breaks
+        listBr = new Array();
+
+        // Construction of the game board
+        for(let column = 1; column <= xsizeGameboard; column++){
+          var br = document.createElement("br");
+          document.body.appendChild(br);
+          listBr.push(br);
+
+          for(let row = 1; row <= ysizeGameboard; row++){
+            var clickableField = document.createElement("button");
+            clickableField.classList.add("field");
+            clickableField.id = column + "," + row;
+            clickableField.addEventListener("click", processMove);
+            document.body.appendChild(clickableField);
+          }
+        }
+
+        // Two breaks between the game board and the delete button
+        var br1 = document.createElement("br");
+        document.body.appendChild(br1);
+        listBr.push(br1);
+        var br2 = document.createElement("br");
+        document.body.appendChild(br2);
+        listBr.push(br2);
+
+        // Creation of the button to delete the game board
+        buttonDeleteBoard = document.createElement("button");
+        buttonDeleteBoard.innerHTML = "Delete Game Board";
+        buttonDeleteBoard.classList.add("delete");
+        buttonDeleteBoard.id = "deleteBoard";
+        buttonDeleteBoard.addEventListener("click", deleteGameBoard);
+        document.body.appendChild(buttonDeleteBoard);
+      }
+
+      function deleteGameBoard(){
+
+        for(let column = 1; column <= xsizeGameboard; column++){
+          for(let row = 1; row <= ysizeGameboard; row++){
+            let oneButton = document.getElementById(column + "," + row);
+            oneButton.parentNode.removeChild(oneButton);
+          }
+        }
+
+        buttonDeleteBoard.parentNode.removeChild(buttonDeleteBoard);
+        // delete all created breaks
+        for(let br = 0; br < listBr.length; br++){
+          listBr[br].parentNode.removeChild(listBr[br]);
+        }
+      }
+
+      var counterScore = 0;
+
+      function processMove(event){
+
+        let clickedFieldID = event.target.id;
+        let clickedField = document.getElementById(clickedFieldID);
+        let clickedFieldCoord = clickedFieldID.split(",");
+        let clickedFieldCoordX = clickedFieldCoord[0];
+        let clickedFieldCoordY = clickedFieldCoord[1];
+
+        clickedField.removeEventListener("click", processMove);
+
+        let bombHit = checkHitBomb(clickedFieldCoordX, clickedFieldCoordY);
+
+        if(bombHit){
+          displayOutcome.innerText = "You lost!";
+          clickedField.innerText = "!!!";
+          counterScore = 0;
+        } else{
+          counterScore++;
+          score.innerText = "Score: " + counterScore;
+
+          let countSurroundBombs = findNumSurroundingBombs(clickedFieldCoordX, clickedFieldCoordY);
+          clickedField.innerHTML = countSurroundBombs;
+
+          checkWin();
+        }
+      }
+
+      function checkHitBomb(coordX, coordY){
+
+        for(let bomb = 0; bomb < level.bombs.length; bomb++){
+          let bombCoordX = level.bombs[bomb].x;
+          let bombCoordY = level.bombs[bomb].y;
+          let xCoordsMatch = coordX == bombCoordX;
+          let yCoordsMatch = coordY == bombCoordY;
+
+          if(xCoordsMatch && yCoordsMatch){
+            return true;
+          }
+        }
+        return false;
+      }
+
+      function findNumSurroundingBombs(fieldCoordX, fieldCoordY){
+
+        let numSurroundBombs = 0;
+
+        for(let a = 0; a < level.bombs.length; a++){
+          let BombCoordX = level.bombs[a].x;
+          let BombCoordY = level.bombs[a].y;
+          let distanceXcoords = Math.abs(BombCoordX - fieldCoordX);
+          let distanceYcoords = Math.abs(BombCoordY - fieldCoordY);
+
+          if(distanceXcoords <= 1 && distanceYcoords <= 1){
+            numSurroundBombs++;
+          }
+        }
+        return numSurroundBombs;
+      }
+
+      function checkWin(){
+
+        let numOfFields = parseInt(xsizeGameboard) * parseInt(ysizeGameboard);
+        let numOfBombs = level.bombs.length;
+        pointsToWin = numOfFields - numOfBombs;
+        if(counterScore == pointsToWin){
+          displayOutcome.innerText = "You won!";
+        }
+      }
+
+      </script>
+
+      <h1>Minesweeper</h1>
+      <form name="inputForm">
+        Enter JSON:
+        <input type="text" name="userInput" id="userInput">
+        <input type="button" value="Start" id="startButton"> <br> <br>
+        <p id="score"></p>
+        <p id="displayOutcome"></p>
+      </form>
+
+  </body>
+  </html>
